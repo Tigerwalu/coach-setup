@@ -33,8 +33,13 @@
   input, select, textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg);
     border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
   textarea { min-height: 64px; resize: vertical; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
-  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 8px; }
+  input, select { min-width: 0; height: 40px; }
+  input[type=date], input[type=time] { -webkit-appearance: none; appearance: none;
+    text-align: left; display: block; }
+  input::-webkit-date-and-time-value { text-align: left; }
+  ::placeholder { color: var(--hint); opacity: .6; font-style: italic; }
+  .row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }
+  .row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 8px; }
   .check { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 15px; margin: 8px 0; }
   .check input { width: auto; }
   .race { border-top: 1px solid var(--line); padding-top: 6px; margin-top: 10px; }
@@ -50,7 +55,7 @@
 <body>
 <main>
   <h1>Coach setup</h1>
-  <p class="lead">Your current answers are filled in. Change anything, then press Save.
+  <p class="lead">Your current answers are filled in. Grey italic text is only an example, not a saved answer. Change anything, then press Save.
     The Sunday review plans with whatever you save here.</p>
 
   <form id="f" autocomplete="off">
@@ -72,19 +77,19 @@
 
     <fieldset>
       <legend>5 km</legend>
-      <div class="row3">
-        <div><label>Current best</label><input name="fk_current" placeholder="26:56"></div>
-        <div><label>Set on</label><input name="fk_date" type="date"></div>
-        <div><label>Target</label><input name="fk_target" placeholder="25:00"></div>
+      <div class="row">
+        <div><label>Current best</label><input name="fk_current" placeholder="mm:ss"></div>
+        <div><label>Target</label><input name="fk_target" placeholder="mm:ss"></div>
       </div>
+      <label>Current best set on</label><input name="fk_date" type="date">
     </fieldset>
 
     <fieldset>
       <legend>Body</legend>
-      <div class="row3">
-        <div><label>Goal</label><select name="body_goal">
+      <label>Goal</label><select name="body_goal">
           <option value="lose">Lose weight</option><option value="maintain">Maintain</option>
-          <option value="recomp">Get leaner, same weight</option></select></div>
+          <option value="recomp">Get leaner, same weight</option></select>
+      <div class="row">
         <div><label>kg</label><input name="body_kg" type="number" step="0.5" min="0" max="15"></div>
         <div><label>By</label><input name="body_by" type="date"></div>
       </div>
@@ -102,8 +107,8 @@
         <div><label>Wake</label><input name="wake" type="time"></div>
         <div><label>Lights out</label><input name="lights_out" type="time"></div>
       </div>
-      <label>Morning location</label><input name="am_where" placeholder="condo gym / park">
-      <label>Evening slot</label><input name="pm" placeholder="18:00-19:00 near work">
+      <label>Morning location</label><input name="am_where" placeholder="e.g. condo gym / park">
+      <label>Evening slot</label><input name="pm" placeholder="e.g. 18:00-19:00 near work">
       <div class="row">
         <div><label>Work usually ends</label><input name="work_end" type="time"></div>
         <div><label>Longest weekend run (min)</label><input name="long_max_min" type="number" min="30" max="240" step="5"></div>
@@ -112,14 +117,14 @@
 
     <fieldset>
       <legend>Team sports</legend>
-      <label>Floorball (usual day, season dates)</label><input name="floorball" placeholder="Sat or Sun; Div 2 2027">
-      <label>Softball (competition dates)</label><input name="softball" placeholder="Dec 2026 TBC; ~Jun 2027">
+      <label>Floorball (usual day, season dates)</label><input name="floorball" placeholder="e.g. Sat or Sun; season dates">
+      <label>Softball (competition dates)</label><input name="softball" placeholder="e.g. competition weekends">
     </fieldset>
 
     <fieldset>
       <legend>Supplements and cycle</legend>
       <div class="row">
-        <div><label>Creatine g/day</label><input name="creatine_g" type="number" min="0" max="10" step="0.5"></div>
+        <div><label>Creatine g/day</label><input name="creatine_g" placeholder="e.g. 5" type="number" min="0" max="10" step="0.5"></div>
         <div><label>Creatine since</label><input name="creatine_start" type="date"></div>
       </div>
       <label class="check"><input type="checkbox" name="whey"> Whey protein available</label>
@@ -152,7 +157,7 @@ const inTelegram = !!(tg && tg.platform && tg.platform !== "unknown");
 if (inTelegram) { document.documentElement.classList.add("tg"); tg.ready(); tg.expand(); }
 
 const PRIORITIES = [["marathon", "Marathon"], ["morning_habit", "Morning habit"],
-                    ["body_composition", "Body composition"], ["5k", "5 km"]];
+                    ["body_composition", "Body & weight"], ["5k", "5 km"]];
 const EQUIPMENT = [["dumbbells", "Dumbbells"], ["resistance_bands", "Resistance bands"],
   ["pull_up_bar", "Pull-up bar"], ["condo_gym_treadmill", "Condo gym treadmill"],
   ["park", "Park"], ["gym_near_work", "Gym near work"]];
@@ -168,7 +173,7 @@ document.getElementById("races").innerHTML = ["A", "B", "C"].map(role => `
     <div class="row">
       <div><label>Date (or earliest)</label><input name="r${role}_date" type="date"></div>
       <div><label>Distance km</label><input name="r${role}_km" type="number" step="0.001" min="0"></div>
-      <div><label>Target</label><input name="r${role}_target" placeholder="4:45:00"></div>
+      <div><label>Target</label><input name="r${role}_target" placeholder="h:mm:ss"></div>
       <div><label>Stretch target</label><input name="r${role}_stretch"></div>
     </div>
   </div>`).join("");
