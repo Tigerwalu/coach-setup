@@ -61,11 +61,10 @@
   <form id="f" autocomplete="off">
     <fieldset>
       <legend>Goal priority (when goals conflict)</legend>
-      <div class="row">
+      <div class="row3">
         <div><label>1st</label><select name="p1"></select></div>
         <div><label>2nd</label><select name="p2"></select></div>
         <div><label>3rd</label><select name="p3"></select></div>
-        <div><label>4th</label><select name="p4"></select></div>
       </div>
     </fieldset>
 
@@ -73,15 +72,6 @@
       <legend>Races</legend>
       <div id="races"></div>
       <p class="small">A = main goal race, B = tune-up, C = anything else. Times as h:mm:ss or mm:ss. Leave a row blank if unused.</p>
-    </fieldset>
-
-    <fieldset>
-      <legend>5 km</legend>
-      <div class="row">
-        <div><label>Current best</label><input name="fk_current" placeholder="mm:ss"></div>
-        <div><label>Target</label><input name="fk_target" placeholder="mm:ss"></div>
-      </div>
-      <label>Current best set on</label><input name="fk_date" type="date">
     </fieldset>
 
     <fieldset>
@@ -157,7 +147,7 @@ const inTelegram = !!(tg && tg.platform && tg.platform !== "unknown");
 if (inTelegram) { document.documentElement.classList.add("tg"); tg.ready(); tg.expand(); }
 
 const PRIORITIES = [["marathon", "Marathon"], ["morning_habit", "Morning habit"],
-                    ["body_composition", "Body & weight"], ["5k", "5 km"]];
+                    ["body_composition", "Body & weight"]];
 const EQUIPMENT = [["dumbbells", "Dumbbells"], ["resistance_bands", "Resistance bands"],
   ["pull_up_bar", "Pull-up bar"], ["condo_gym_treadmill", "Condo gym treadmill"],
   ["park", "Park"], ["gym_near_work", "Gym near work"]];
@@ -165,7 +155,7 @@ const f = document.getElementById("f");
 const $ = name => f.elements[name];
 
 // ---- build the repeating parts ----
-for (let i = 1; i <= 4; i++)
+for (let i = 1; i <= 3; i++)
   $("p" + i).innerHTML = PRIORITIES.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
 document.getElementById("races").innerHTML = ["A", "B", "C"].map(role => `
   <div class="race">
@@ -204,8 +194,6 @@ function fill(a) {
     if (!role) return;
     ["name", "date", "km", "target", "stretch"].forEach(k => put(`r${role}_${k}`, r[k]));
   });
-  put("fk_current", get(a, "five_k", "current")); put("fk_date", get(a, "five_k", "date"));
-  put("fk_target", get(a, "five_k", "target"));
   put("body_goal", get(a, "body", "goal")); put("body_kg", get(a, "body", "kg"));
   put("body_by", get(a, "body", "by"));
   put("sessions", a.sessions);
@@ -231,9 +219,8 @@ function collect() {
     target: val(`r${role}_target`), stretch: val(`r${role}_stretch`) })).filter(r => r.name);
   return {
     v: 1,
-    priority: [1, 2, 3, 4].map(i => val("p" + i)),
+    priority: [1, 2, 3].map(i => val("p" + i)),
     races,
-    five_k: { current: val("fk_current"), date: val("fk_date"), target: val("fk_target") },
     body: { goal: val("body_goal"), kg: num("body_kg"), by: val("body_by") },
     sessions: val("sessions"),
     habit: { am_starts: Number(val("am_starts")), start: val("start"), wake: val("wake"),
@@ -251,10 +238,9 @@ function collect() {
 }
 function problems(a) {
   const out = [];
-  if (new Set(a.priority).size !== 4) out.push("Each goal can only appear once in the priority list.");
+  if (new Set(a.priority).size !== 3) out.push("Each goal can only appear once in the priority list.");
   const timeOk = t => !t || /^\d{1,2}:\d{2}(:\d{2})?$/.test(t);
   a.races.forEach(r => { if (!timeOk(r.target) || !timeOk(r.stretch)) out.push(`Check the times for ${r.name} (use h:mm:ss).`); });
-  if (!timeOk(a.five_k.current) || !timeOk(a.five_k.target)) out.push("Check the 5 km times (use mm:ss).");
   return out;
 }
 document.getElementById("save").addEventListener("click", () => {
